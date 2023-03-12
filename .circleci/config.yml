@@ -9,12 +9,17 @@ workflows:
             branches:
               only:
                 - main    
+      - deploy:
+          filters:
+              branches:
+                only:
+                  - main    
+          requires:
+            - build
 
-
-# Define the jobs we want to run for this project
 jobs:
   build:
-    working_directory: ~/SimpleApplication
+    working_directory: ~/ExampleApplication
     docker:
       - image: circleci/node:latest
     steps:
@@ -34,3 +39,10 @@ jobs:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
+  deploy:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - run:
+          name: deploy-application
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "rm -rf DevOps-CA-V2/;git clone "https://github.com/DenisWAD/DevOps-CA-V2; source DevOps-CA-V2/deploy.sh"
